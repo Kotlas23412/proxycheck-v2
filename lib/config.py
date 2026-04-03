@@ -135,6 +135,10 @@ ALLOWED_COUNTRIES = [c.strip().upper() for c in ALLOWED_COUNTRIES_STR.split(",")
 # Проверка стабильности
 STABILITY_CHECKS = _env_int("STABILITY_CHECKS", 1)
 STABILITY_CHECK_DELAY = _env_float("STABILITY_CHECK_DELAY", 2.0)
+# Финальная отложенная перепроверка: помогает отсеять прокси, которые «умирают» через 2-10 минут
+# (например, под DPI/TPU ограничениями). 0 = выключено.
+POST_CHECK_DELAY_SEC = _env_int("POST_CHECK_DELAY_SEC", 0)
+POST_CHECK_WORKERS = _env_int("POST_CHECK_WORKERS", 50)
 
 # Строгий режим
 STRICT_MODE = _env_bool("STRICT_MODE", False)

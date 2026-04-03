@@ -67,6 +67,9 @@ from lib.config import (
     NOTWORKERS_UPDATE_ENABLED,
     EXCLUDE_TRANSIENT_FROM_NOTWORKERS,
     OUTPUT_ADD_DATE,
+    POST_CHECK_DELAY_SEC,
+    POST_CHECK_WORKERS,
+
 )
 from lib.config_display import print_current_config
 from lib.export import export_to_csv, export_to_html, export_to_json
@@ -498,6 +501,44 @@ def main():
                         maybe_print_pct_milestones(done)
 
     elapsed = time.perf_counter() - time_start
+
+    # Финальная отложенная перепроверка (anti-DPI/TPU): ждём N секунд и повторно
+    # проверяем только уже прошедшие ключи. Помогает убрать «умирающие через 5 минут».
+    if POST_CHECK_DELAY_SEC > 0 and available_keys:
+        delay_sec = max(0, int(POST_CHECK_DELAY_SEC))
+        workers = max(1, int(POST_CHECK_WORKERS))
+        console.print(
+            f"[yellow]Финальная перепроверка:[/yellow] ожидание {delay_sec}с, "
+            f"повторная проверка {len(available_keys)} ключей..."
+        )
+        time.sleep(delay_sec)
+
+        survivors: set[str] = set()
+        dropped = 0
+        with ThreadPoolExecutor(max_workers=min(workers, len(available_keys))) as executor:
+            fut_map = {executor.submit(check_key_e2e, link, False, cache): link for link in available_keys}
+            for fut, link in fut_map.items():
+                try:
+                    _link, ok, metrics = fut.result()
+                    all_metrics[_link] = metrics
+                    if ok:
+                        survivors.add(_link)
+                    else:
+                        dropped += 1
+                except Exception:
+                    dropped += 1
+
+        if dropped > 0:
+            available = [
+                item for item in available
+                if _extract_first_proxy_line_from_formatted(item[0]).split(maxsplit=1)[0].strip() in survivors
+            ]
+            available_keys = [k for k in available_keys if k in survivors]
+            console.print(
+                f"[yellow]Финальная перепроверка:[/yellow] отсеяно {dropped} нестабильных, "
+                f"осталось {len(available_keys)}"
+            )
+
     save_results_and_exit(available, all_metrics, output_path, elapsed, total, cache, link_to_full, set(available_keys))
 
 
