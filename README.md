@@ -121,6 +121,8 @@ pip install -r requirements.txt
 
 Полный список переменных - в `.env.example`.
 
+- VPN-проверка в GitHub Actions (временный туннель внутри job): `docs/github-actions-vpn-check.md`
+
 ---
 
 ---
