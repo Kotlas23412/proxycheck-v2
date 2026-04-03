@@ -285,7 +285,7 @@ chmod +x run_check.sh
 | `OUTPUT_DIR` | Директория для результатов (`configs`), включая `notworkers` |
 | `OUTPUT_ADD_DATE` | Добавлять дату и источник к имени файла (`true`/`false`) |
 | `NOTWORKERS_UPDATE_ENABLED` | Обновлять файл нерабочих ключей `notworkers` в `OUTPUT_DIR` после проверки (`false` - только чтение для фильтра) |
-| `AUTO_COMMENT` | Комментарий, который добавляется к проверенным конфигам (после флага страны) |
+| `AUTO_COMMENT` | Legacy-переменная для старого формата комментариев (текущий `strip_vpn_comments.py` формирует `# <flag> <country>[ | LTE]`) |
 | `STRIP_VPN_COMMENTS_LTE_MARK` | Добавлять `\| LTE` в комментарий, если endpoint IP попал в `cidrlist` (`true`/`false`) |
 | `STRIP_VPN_COMMENTS_CIDR_FILE` | Путь к файлу CIDR для `\| LTE` (по умолчанию `cidrlist`) |
 | `STRIP_VPN_COMMENTS_GEO_MMDB` / `GEOIP_MMDB` | Путь к MMDB для более точного определения страны (fallback - ip-api) |
