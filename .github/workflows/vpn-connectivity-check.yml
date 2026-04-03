@@ -1,0 +1,120 @@
+name: VPN connectivity check
+
+on:
+  workflow_dispatch:
+    inputs:
+      vpn_type:
+        description: "Тип VPN"
+        required: true
+        default: openvpn
+        type: choice
+        options:
+          - openvpn
+          - wireguard
+      test_url:
+        description: "URL для проверки через VPN"
+        required: true
+        default: https://www.gstatic.com/generate_204
+        type: string
+
+jobs:
+  check-via-vpn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show baseline egress IP
+        run: |
+          set -e
+          echo "Baseline IP: $(curl -4 -sS --max-time 15 https://api.ipify.org)"
+
+      - name: Install VPN tools
+        run: |
+          set -e
+          sudo apt-get update
+          sudo apt-get install -y openvpn wireguard-tools
+
+      - name: Connect OpenVPN
+        if: ${{ inputs.vpn_type == 'openvpn' }}
+        env:
+          OVPN_CONFIG_B64: ${{ secrets.OVPN_CONFIG_B64 }}
+          OVPN_AUTH_B64: ${{ secrets.OVPN_AUTH_B64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${OVPN_CONFIG_B64:-}" ]; then
+            echo "::error::Missing secret OVPN_CONFIG_B64"
+            exit 1
+          fi
+
+          echo "$OVPN_CONFIG_B64" | base64 -d > "$RUNNER_TEMP/client.ovpn"
+          if [ -n "${OVPN_AUTH_B64:-}" ]; then
+            echo "$OVPN_AUTH_B64" | base64 -d > "$RUNNER_TEMP/auth.txt"
+            chmod 600 "$RUNNER_TEMP/auth.txt"
+            if ! grep -q '^auth-user-pass' "$RUNNER_TEMP/client.ovpn"; then
+              echo "auth-user-pass $RUNNER_TEMP/auth.txt" >> "$RUNNER_TEMP/client.ovpn"
+            fi
+          fi
+
+          sudo openvpn --config "$RUNNER_TEMP/client.ovpn" --daemon --log "$RUNNER_TEMP/openvpn.log"
+
+          for i in $(seq 1 30); do
+            if ip route | grep -qE 'tun[0-9]'; then
+              echo "OpenVPN connected"
+              break
+            fi
+            sleep 2
+            if [ "$i" -eq 30 ]; then
+              echo "::error::OpenVPN did not establish tunnel"
+              sudo tail -n 120 "$RUNNER_TEMP/openvpn.log" || true
+              exit 1
+            fi
+          done
+
+      - name: Connect WireGuard
+        if: ${{ inputs.vpn_type == 'wireguard' }}
+        env:
+          WG_CONFIG_B64: ${{ secrets.WG_CONFIG_B64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${WG_CONFIG_B64:-}" ]; then
+            echo "::error::Missing secret WG_CONFIG_B64"
+            exit 1
+          fi
+
+          echo "$WG_CONFIG_B64" | base64 -d > "$RUNNER_TEMP/wg0.conf"
+          sudo chmod 600 "$RUNNER_TEMP/wg0.conf"
+          sudo wg-quick up "$RUNNER_TEMP/wg0.conf"
+
+      - name: Validate VPN path
+        run: |
+          set -euo pipefail
+          echo "IP after VPN: $(curl -4 -sS --max-time 20 https://api.ipify.org)"
+          echo "Testing URL: ${{ inputs.test_url }}"
+          curl -sS -o /tmp/vpn_test_body -w "HTTP=%{http_code} TIME=%{time_total}\n" \
+            --max-time 20 "${{ inputs.test_url }}"
+          echo "Route table excerpt:"
+          ip route | sed -n '1,40p'
+
+      - name: Run repository checker over VPN
+        env:
+          MODE: single
+          TEST_URLS_HTTPS: ${{ inputs.test_url }}
+          REQUIRE_HTTPS: 'true'
+          STRONG_STYLE_TEST: 'true'
+          STRONG_ATTEMPTS: '1'
+          MAX_WORKERS: '30'
+        run: |
+          set -e
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python -m lib.vless_checker
+
+      - name: Cleanup VPN
+        if: always()
+        run: |
+          if ip link show wg0 >/dev/null 2>&1; then
+            sudo wg-quick down wg0 || true
+          fi
+          sudo pkill openvpn || true
