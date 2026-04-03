@@ -213,7 +213,6 @@ def process_file(
     geo_cache: dict[str, tuple[str, str]] = {}
     mmdb_cache: dict[str, tuple[str, str]] = {}
 
-
     reader_holder: dict[str, object] = {}
     host_to_ip: dict[str, str] = {}
     cidr_networks = _load_cidr_networks(STRIP_CIDR_FILE) if add_comment else []
@@ -252,26 +251,18 @@ def process_file(
                 is_lte = False
             else:
                 ip = host_to_ip.get(host, "") if host else ""
-                # Максимально точное определение страны: сначала локальный MMDB, затем ip-api.
-                cc, country_name = _cc_from_mmdb(ip, STRIP_GEO_MMDB, mmdb_cache, reader_holder)
-                if not cc and ip:
-                    cc, country_name = geo_cache.get(ip, ("", ""))
+                # Для актуальности предпочитаем ip-api (кэш), MMDB используем как резерв.
+                cc, country_name = geo_cache.get(ip, ("", "")) if ip else ("", "")
                 if not cc and ip:
                     cc, country_name = fetch_country_for_ip(ip, geo_cache)
+                if not cc and ip:
+                    cc, country_name = _cc_from_mmdb(ip, STRIP_GEO_MMDB, mmdb_cache, reader_holder)
                 is_lte = _ip_in_cidr(ip, cidr_networks)
 
             flag = country_code_to_flag(cc)
             country_label = (country_name or cc or "Unknown").strip()
             suffix = " | LTE" if (STRIP_ADD_LTE_MARK and is_lte) else ""
             link = f"{link}#{flag} {country_label}{suffix}"
-
-                cc = _cc_from_mmdb(ip, STRIP_GEO_MMDB, mmdb_cache, reader_holder) or geo_cache.get(ip, "")
-                if not cc and ip:
-                    cc = fetch_country_for_ip(ip, geo_cache)
-                is_lte = _ip_in_cidr(ip, cidr_networks)
-            flag = country_code_to_flag(cc)
-            lte_mark = " | LTE" if (STRIP_ADD_LTE_MARK and is_lte) else ""
-            link = f"{link}#{flag}{lte_mark} {get_auto_comment().strip()}"
         result.append(link)
     reader = reader_holder.get("reader")
     if reader is not None:
