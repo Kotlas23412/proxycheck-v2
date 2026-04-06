@@ -12,6 +12,11 @@ on:
     types: [completed]
     branches: [main]
   workflow_dispatch:
+    inputs:
+      phone_proxy_url:
+        description: "URL прокси телефона (если пусто — прямой маршрут GitHub)"
+        required: false
+        type: string
 
 concurrency:
   group: xraycheck-serial
@@ -200,6 +205,42 @@ jobs:
           ref: main
           fetch-depth: 1
 
+      - name: Connect to Tailscale (auto, non-blocking)
+        id: ts_connect
+        if: ${{ (github.event_name == 'workflow_dispatch' && inputs.phone_proxy_url != '') || (github.event_name != 'workflow_dispatch' && vars.PHONE_PROXY_URL != '') }}
+        continue-on-error: true
+        uses: tailscale/github-action@v2
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+
+      - name: "Auto route: phone proxy first, GitHub direct fallback"
+        id: route_select
+        run: |
+          set -euo pipefail
+          PROXY_URL="${{ github.event_name == 'workflow_dispatch' && inputs.phone_proxy_url || vars.PHONE_PROXY_URL }}"
+          TS_OUTCOME="${{ steps.ts_connect.outcome || 'skipped' }}"
+
+          echo "=== Network bootstrap ==="
+          DIRECT_IP="$(curl -fsS --max-time 20 https://ifconfig.me || true)"
+          echo "NETWORK_ROUTE=github-direct" >> "$GITHUB_ENV"
+
+          if [ -z "${PROXY_URL}" ]; then
+            echo "::notice::PHONE_PROXY_URL не задан. Работаем напрямую через GitHub runner."
+            exit 0
+          fi
+
+          if PROXY_IP="$(curl -fsS --max-time 30 -x "${PROXY_URL}" https://ifconfig.me)"; then
+            {
+              echo "HTTP_PROXY=${PROXY_URL}"
+              echo "HTTPS_PROXY=${PROXY_URL}"
+              echo "ALL_PROXY=${PROXY_URL}"
+              echo "NETWORK_ROUTE=phone-proxy"
+            } >> "$GITHUB_ENV"
+            echo "::notice::Phone proxy is active. Using phone route. IP: ${PROXY_IP}"
+          else
+            echo "::warning::Phone proxy is unavailable. Falling back to direct GitHub runner route."
+          fi
+          
       - name: Setup Xray and Hysteria binaries (required for Docker build)
         run: bash tools/setup-binaries.sh
 
@@ -406,6 +447,9 @@ jobs:
             cat configs/available | docker compose run --rm -T \
             -e OUTPUT_FILE="$OUTPUT_FILE" \
             -e GITHUB_ACTIONS=true \
+            -e HTTP_PROXY="$HTTP_PROXY" \
+            -e HTTPS_PROXY="$HTTPS_PROXY" \
+            -e ALL_PROXY="$ALL_PROXY" \
             -e OUTPUT_DIR="$OUTPUT_DIR" \
             -e MODE="$MODE" \
             -e NOTWORKERS_UPDATE_ENABLED="$NOTWORKERS_UPDATE_ENABLED" \
