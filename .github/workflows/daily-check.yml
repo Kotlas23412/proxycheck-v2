@@ -214,7 +214,7 @@ jobs:
 
       - name: Connect to Tailscale (auto, non-blocking)
         id: ts_connect
-        if: ${{ (github.event_name == 'workflow_dispatch' && inputs.phone_proxy_url != '') || (github.event_name != 'workflow_dispatch' && vars.PHONE_PROXY_URL != '') }}
+        if: ${{ inputs.phone_proxy_url != '' || vars.PHONE_PROXY_URL != '' }}
         continue-on-error: true
         uses: tailscale/github-action@v2
         with:
@@ -224,31 +224,18 @@ jobs:
         id: route_select
         run: |
           set -euo pipefail
-          PROXY_URL="${{ github.event_name == 'workflow_dispatch' && inputs.phone_proxy_url || vars.PHONE_PROXY_URL }}"
+          PROXY_URL="${{ inputs.phone_proxy_url || vars.PHONE_PROXY_URL }}"
           TS_OUTCOME="${{ steps.ts_connect.outcome || 'skipped' }}"
 
           echo "=== Network bootstrap ==="
-          echo "Tailscale connect step outcome: ${TS_OUTCOME}"
-
           DIRECT_IP="$(curl -fsS --max-time 20 https://ifconfig.me || true)"
-          echo "Direct GitHub runner IP: ${DIRECT_IP:-unknown}"
-
           echo "NETWORK_ROUTE=github-direct" >> "$GITHUB_ENV"
-          echo "route=github-direct" >> "$GITHUB_OUTPUT"
-          echo "direct_ip=${DIRECT_IP:-unknown}" >> "$GITHUB_OUTPUT"
 
           if [ -z "${PROXY_URL}" ]; then
             echo "::notice::PHONE_PROXY_URL не задан. Работаем напрямую через GitHub runner."
-            {
-              echo "### Network route"
-              echo "- Mode: **github-direct**"
-              echo "- Reason: PHONE_PROXY_URL is empty"
-              echo "- Direct IP: \`${DIRECT_IP:-unknown}\`"
-            } >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
 
-          echo "Trying phone proxy: ${PROXY_URL}"
           if PROXY_IP="$(curl -fsS --max-time 30 -x "${PROXY_URL}" https://ifconfig.me)"; then
             {
               echo "HTTP_PROXY=${PROXY_URL}"
@@ -256,28 +243,9 @@ jobs:
               echo "ALL_PROXY=${PROXY_URL}"
               echo "NETWORK_ROUTE=phone-proxy"
             } >> "$GITHUB_ENV"
-            echo "route=phone-proxy" >> "$GITHUB_OUTPUT"
-            echo "proxy_ip=${PROXY_IP}" >> "$GITHUB_OUTPUT"
-            echo "::notice::Phone proxy is active. Using phone route."
-            echo "Phone proxy egress IP: ${PROXY_IP}"
-            {
-              echo "### Network route"
-              echo "- Mode: **phone-proxy**"
-              echo "- Tailscale step: \`${TS_OUTCOME}\`"
-              echo "- Proxy URL: \`${PROXY_URL}\`"
-              echo "- Direct IP: \`${DIRECT_IP:-unknown}\`"
-              echo "- Proxy IP: \`${PROXY_IP}\`"
-            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::notice::Phone proxy is active. Using phone route. IP: ${PROXY_IP}"
           else
             echo "::warning::Phone proxy is unavailable. Falling back to direct GitHub runner route."
-            {
-              echo "### Network route"
-              echo "- Mode: **github-direct (fallback)**"
-              echo "- Tailscale step: \`${TS_OUTCOME}\`"
-              echo "- Proxy URL: \`${PROXY_URL}\`"
-              echo "- Direct IP: \`${DIRECT_IP:-unknown}\`"
-              echo "- Proxy check: failed"
-            } >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Set up Python
