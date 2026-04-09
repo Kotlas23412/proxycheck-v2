@@ -124,4 +124,95 @@ def main():
     print("🤖 ГЕНЕРАТОР VLESS ПРОКСИ-КОНФИГУРАЦИЙ (GitHub Actions Edition)")
     print("=" * 70)
     
-    all_links = 
+    all_links = []
+    seen_hosts = set()
+
+    for file_name in INPUT_FILES:
+        path = os.path.join(CONFIGS_DIR, file_name)
+        if not os.path.exists(path):
+            print(f"⚠️  Файл не найден: {path}")
+            continue
+        
+        print(f"📂 Читаю файл: {file_name}")
+        with open(path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line or not line.startswith('vless://'):
+                    continue
+                try:
+                    host = urllib.parse.urlsplit(line).hostname
+                    if host and host not in seen_hosts:
+                        seen_hosts.add(host)
+                        all_links.append(line)
+                except Exception:
+                    continue
+    
+    print(f"\n✅ Найдено {len(all_links)} уникальных VLESS прокси")
+    
+    if not all_links:
+        print("❌ Прокси не найдены. Проверьте файлы в папке configs/")
+        return
+
+    all_outbounds = []
+    for i, link in enumerate(all_links):
+        outbound_obj = parse_link_to_outbound(link, i)
+        if outbound_obj:
+            all_outbounds.append(outbound_obj)
+
+    print(f"✅ Успешно обработано {len(all_outbounds)} прокси")
+
+    # Создаём output папку (включая подпапки)
+    Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
+    
+    # Очищаем старые файлы
+    for old_file in Path(OUTPUT_DIR).glob('*.json'):
+        old_file.unlink()
+        print(f"🗑️  Удалён старый файл: {old_file.name}")
+    
+    try:
+        with open(TEMPLATE_FILE, 'r', encoding='utf-8') as f:
+            base_template = json.load(f)
+    except FileNotFoundError:
+        print(f"❌ Не найден файл {TEMPLATE_FILE}")
+        return
+    except json.JSONDecodeError:
+        print(f"❌ Файл {TEMPLATE_FILE} содержит невалидный JSON")
+        return
+
+    standard_outbounds = [
+        {"protocol": "freedom", "tag": "direct"},
+        {"protocol": "blackhole", "tag": "block"}
+    ]
+    
+    chunk_size = math.ceil(len(all_outbounds) / NUM_OUTPUT_FILES)
+    
+    print(f"\n📦 Создаю {NUM_OUTPUT_FILES} файлов по ~{chunk_size} прокси в каждом...\n")
+
+    for i in range(NUM_OUTPUT_FILES):
+        start_index = i * chunk_size
+        end_index = start_index + chunk_size
+        proxy_chunk = all_outbounds[start_index:end_index]
+
+        if not proxy_chunk:
+            break
+
+        config = json.loads(json.dumps(base_template))
+        proxy_tags = [p['tag'] for p in proxy_chunk]
+
+        config['outbounds'] = proxy_chunk + standard_outbounds
+        config['burstObservatory']['subjectSelector'] = proxy_tags
+        config['routing']['balancers'][0]['selector'] = proxy_tags
+        config['remarks'] = f"🚀 Группа {i+1}/{NUM_OUTPUT_FILES} ({len(proxy_chunk)} прокси)"
+
+        output_filename = os.path.join(OUTPUT_DIR, f'vless_group_{i+1:02d}.json')
+        with open(output_filename, 'w', encoding='utf-8') as f:
+            json.dump(config, f, indent=2, ensure_ascii=False)
+        
+        print(f"  ✅ vless_group_{i+1:02d}.json — {len(proxy_chunk)} прокси")
+
+    print(f"\n{'=' * 70}")
+    print(f"🎉 ГОТОВО! Файлы созданы в папке '{OUTPUT_DIR}/'")
+    print(f"{'=' * 70}")
+
+if __name__ == "__main__":
+    main()
