@@ -6,9 +6,10 @@ import math
 from pathlib import Path
 
 # --- НАСТРОЙКИ ---
-CONFIGS_DIR = 'configs'
-OUTPUT_DIR = 'output/vless_configs'  # ← Новый путь
-TEMPLATE_FILE = 'scripts/template.json'
+# Пути относительно корня репозитория
+CONFIGS_DIR = '../configs'  # ← Исходные файлы вне tool
+OUTPUT_DIR = 'output/vless_configs'  # ← Результаты внутри tool
+TEMPLATE_FILE = 'scripts/template.json'  # ← Шаблон внутри tool/scripts
 
 INPUT_FILES = [
     'top100_available',
@@ -121,20 +122,30 @@ def parse_link_to_outbound(link, index):
 
 def main():
     print("=" * 70)
-    print("🤖 ГЕНЕРАТОР VLESS ПРОКСИ-КОНФИГУРАЦИЙ (GitHub Actions Edition)")
+    print("🤖 ГЕНЕРАТОР VLESS ПРОКСИ-КОНФИГУРАЦИЙ")
     print("=" * 70)
+    
+    # Получаем абсолютный путь к папке со скриптом
+    script_dir = Path(__file__).parent.parent  # tool/
+    configs_dir = script_dir / CONFIGS_DIR
+    output_dir = script_dir / OUTPUT_DIR
+    template_file = script_dir / TEMPLATE_FILE
+    
+    print(f"📂 Рабочая директория: {script_dir}")
+    print(f"📂 Папка с конфигами: {configs_dir}")
+    print(f"📂 Папка для результатов: {output_dir}")
     
     all_links = []
     seen_hosts = set()
 
     for file_name in INPUT_FILES:
-        path = os.path.join(CONFIGS_DIR, file_name)
-        if not os.path.exists(path):
-            print(f"⚠️  Файл не найден: {path}")
+        file_path = configs_dir / file_name
+        if not file_path.exists():
+            print(f"⚠️  Файл не найден: {file_path}")
             continue
         
-        print(f"📂 Читаю файл: {file_name}")
-        with open(path, 'r', encoding='utf-8') as f:
+        print(f"📖 Читаю файл: {file_name}")
+        with open(file_path, 'r', encoding='utf-8') as f:
             for line in f:
                 line = line.strip()
                 if not line or not line.startswith('vless://'):
@@ -151,7 +162,7 @@ def main():
     
     if not all_links:
         print("❌ Прокси не найдены. Проверьте файлы в папке configs/")
-        return
+        return 1
 
     all_outbounds = []
     for i, link in enumerate(all_links):
@@ -161,23 +172,23 @@ def main():
 
     print(f"✅ Успешно обработано {len(all_outbounds)} прокси")
 
-    # Создаём output папку (включая подпапки)
-    Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
+    # Создаём output папку
+    output_dir.mkdir(parents=True, exist_ok=True)
     
     # Очищаем старые файлы
-    for old_file in Path(OUTPUT_DIR).glob('*.json'):
+    for old_file in output_dir.glob('*.json'):
         old_file.unlink()
         print(f"🗑️  Удалён старый файл: {old_file.name}")
     
     try:
-        with open(TEMPLATE_FILE, 'r', encoding='utf-8') as f:
+        with open(template_file, 'r', encoding='utf-8') as f:
             base_template = json.load(f)
     except FileNotFoundError:
-        print(f"❌ Не найден файл {TEMPLATE_FILE}")
-        return
+        print(f"❌ Не найден файл {template_file}")
+        return 1
     except json.JSONDecodeError:
-        print(f"❌ Файл {TEMPLATE_FILE} содержит невалидный JSON")
-        return
+        print(f"❌ Файл {template_file} содержит невалидный JSON")
+        return 1
 
     standard_outbounds = [
         {"protocol": "freedom", "tag": "direct"},
@@ -188,6 +199,7 @@ def main():
     
     print(f"\n📦 Создаю {NUM_OUTPUT_FILES} файлов по ~{chunk_size} прокси в каждом...\n")
 
+    created_files = 0
     for i in range(NUM_OUTPUT_FILES):
         start_index = i * chunk_size
         end_index = start_index + chunk_size
@@ -204,15 +216,17 @@ def main():
         config['routing']['balancers'][0]['selector'] = proxy_tags
         config['remarks'] = f"🚀 Группа {i+1}/{NUM_OUTPUT_FILES} ({len(proxy_chunk)} прокси)"
 
-        output_filename = os.path.join(OUTPUT_DIR, f'vless_group_{i+1:02d}.json')
+        output_filename = output_dir / f'vless_group_{i+1:02d}.json'
         with open(output_filename, 'w', encoding='utf-8') as f:
             json.dump(config, f, indent=2, ensure_ascii=False)
         
-        print(f"  ✅ vless_group_{i+1:02d}.json — {len(proxy_chunk)} прокси")
+        print(f"  ✅ {output_filename.name} — {len(proxy_chunk)} прокси")
+        created_files += 1
 
     print(f"\n{'=' * 70}")
-    print(f"🎉 ГОТОВО! Файлы созданы в папке '{OUTPUT_DIR}/'")
+    print(f"🎉 ГОТОВО! Создано {created_files} файлов в '{output_dir.relative_to(script_dir)}'")
     print(f"{'=' * 70}")
+    return 0
 
 if __name__ == "__main__":
-    main()
+    exit(main())
