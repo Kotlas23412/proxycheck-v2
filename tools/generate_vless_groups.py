@@ -6,9 +6,9 @@ import math
 from pathlib import Path
 
 # --- НАСТРОЙКИ ---
-CONFIGS_DIR = 'configs'              # ← Исходные файлы
-OUTPUT_DIR = 'vless_configs'         # ← Результаты в корне репозитория
-TEMPLATE_FILE = 'tools/template.json' # ← Шаблон в tools
+CONFIGS_DIR = 'configs'
+OUTPUT_DIR = 'vless_configs'
+TEMPLATE_FILE = 'tools/template.json'
 
 INPUT_FILES = [
     'top100_available',
@@ -42,13 +42,20 @@ def normalize_name(original_name, address, sni, index):
         sni_lower = sni.lower()
         if any(x in sni_lower for x in ['.ru', '.su', 'yandex', 'vk.com', 'x5.ru']):
             flag, country_name = "🇷🇺", "Россия"
-        elif sni_lower.endswith('.de'): flag, country_name = "🇩🇪", "Германия"
-        elif sni_lower.endswith('.nl'): flag, country_name = "🇳🇱", "Нидерланды"
-        elif sni_lower.endswith('.fi'): flag, country_name = "🇫🇮", "Финляндия"
-        elif sni_lower.endswith('.us'): flag, country_name = "🇺🇸", "США"
-        elif sni_lower.endswith(('.uk', '.co.uk')): flag, country_name = "🇬🇧", "Великобритания"
-        elif sni_lower.endswith('.fr'): flag, country_name = "🇫🇷", "Франция"
-        elif sni_lower.endswith('.se'): flag, country_name = "🇸🇪", "Швеция"
+        elif sni_lower.endswith('.de'): 
+            flag, country_name = "🇩🇪", "Германия"
+        elif sni_lower.endswith('.nl'): 
+            flag, country_name = "🇳🇱", "Нидерланды"
+        elif sni_lower.endswith('.fi'): 
+            flag, country_name = "🇫🇮", "Финляндия"
+        elif sni_lower.endswith('.us'): 
+            flag, country_name = "🇺🇸", "США"
+        elif sni_lower.endswith(('.uk', '.co.uk')): 
+            flag, country_name = "🇬🇧", "Великобритания"
+        elif sni_lower.endswith('.fr'): 
+            flag, country_name = "🇫🇷", "Франция"
+        elif sni_lower.endswith('.se'): 
+            flag, country_name = "🇸🇪", "Швеция"
     
     return f"{flag} {country_name} #{index + 1}"
 
@@ -90,25 +97,33 @@ def parse_link_to_outbound(link, index):
 
         if network == "ws":
             ws_settings = {}
-            if "path" in params: ws_settings["path"] = params["path"]
-            if "host" in params: ws_settings["headers"] = {"Host": params["host"]}
+            if "path" in params: 
+                ws_settings["path"] = params["path"]
+            if "host" in params: 
+                ws_settings["headers"] = {"Host": params["host"]}
             outbound["streamSettings"]["wsSettings"] = ws_settings
         elif network == "grpc":
             grpc_settings = {}
-            if "serviceName" in params: grpc_settings["serviceName"] = params["serviceName"]
+            if "serviceName" in params: 
+                grpc_settings["serviceName"] = params["serviceName"]
             outbound["streamSettings"]["grpcSettings"] = grpc_settings
 
         sec = params.get("security", "")
         if sec in ["tls", "reality"]:
             outbound["streamSettings"]["security"] = sec
             sec_obj = {}
-            if "sni" in params: sec_obj["serverName"] = params["sni"]
-            if "fp" in params: sec_obj["fingerprint"] = params["fp"]
+            if "sni" in params: 
+                sec_obj["serverName"] = params["sni"]
+            if "fp" in params: 
+                sec_obj["fingerprint"] = params["fp"]
             
             if sec == "reality":
-                if "pbk" in params: sec_obj["publicKey"] = params["pbk"]
-                if "sid" in params: sec_obj["shortId"] = params["sid"]
-                if "spx" in params: sec_obj["spiderX"] = params["spx"]
+                if "pbk" in params: 
+                    sec_obj["publicKey"] = params["pbk"]
+                if "sid" in params: 
+                    sec_obj["shortId"] = params["sid"]
+                if "spx" in params: 
+                    sec_obj["spiderX"] = params["spx"]
                 outbound["streamSettings"]["realitySettings"] = sec_obj
             else:
                 outbound["streamSettings"]["tlsSettings"] = sec_obj
@@ -116,23 +131,22 @@ def parse_link_to_outbound(link, index):
         return outbound
 
     except Exception as e:
-        print(f"⚠️  Ошибка парсинга: {str(e)[:50]}")
+        print(f"Ошибка парсинга: {str(e)[:50]}")
         return None
 
 def main():
     print("=" * 70)
-    print("🤖 ГЕНЕРАТОР VLESS ПРОКСИ-КОНФИГУРАЦИЙ")
+    print("ГЕНЕРАТОР VLESS ПРОКСИ-КОНФИГУРАЦИЙ")
     print("=" * 70)
     
-    # Работаем относительно корня репозитория
     repo_root = Path.cwd()
     configs_dir = repo_root / CONFIGS_DIR
     output_dir = repo_root / OUTPUT_DIR
     template_file = repo_root / TEMPLATE_FILE
     
-    print(f"📂 Корень репозитория: {repo_root}")
-    print(f"📂 Папка с конфигами: {configs_dir}")
-    print(f"📂 Папка для результатов: {output_dir}")
+    print(f"Корень репозитория: {repo_root}")
+    print(f"Папка с конфигами: {configs_dir}")
+    print(f"Папка для результатов: {output_dir}")
     
     all_links = []
     seen_hosts = set()
@@ -140,10 +154,10 @@ def main():
     for file_name in INPUT_FILES:
         file_path = configs_dir / file_name
         if not file_path.exists():
-            print(f"⚠️  Файл не найден: {file_path}")
+            print(f"Файл не найден: {file_path}")
             continue
         
-        print(f"📖 Читаю файл: {file_name}")
+        print(f"Читаю файл: {file_name}")
         with open(file_path, 'r', encoding='utf-8') as f:
             for line in f:
                 line = line.strip()
@@ -157,10 +171,10 @@ def main():
                 except Exception:
                     continue
     
-    print(f"\n✅ Найдено {len(all_links)} уникальных VLESS прокси")
+    print(f"\nНайдено {len(all_links)} уникальных VLESS прокси")
     
     if not all_links:
-        print("❌ Прокси не найдены. Проверьте файлы в папке configs/")
+        print("Прокси не найдены. Проверьте файлы в папке configs/")
         return 1
 
     all_outbounds = []
@@ -169,24 +183,22 @@ def main():
         if outbound_obj:
             all_outbounds.append(outbound_obj)
 
-    print(f"✅ Успешно обработано {len(all_outbounds)} прокси")
+    print(f"Успешно обработано {len(all_outbounds)} прокси")
 
-    # Создаём output папку
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    # Очищаем старые файлы
     for old_file in output_dir.glob('*.json'):
         old_file.unlink()
-        print(f"🗑️  Удалён старый файл: {old_file.name}")
+        print(f"Удален старый файл: {old_file.name}")
     
     try:
         with open(template_file, 'r', encoding='utf-8') as f:
             base_template = json.load(f)
     except FileNotFoundError:
-        print(f"❌ Не найден файл {template_file}")
+        print(f"Не найден файл {template_file}")
         return 1
     except json.JSONDecodeError:
-        print(f"❌ Файл {template_file} содержит невалидный JSON")
+        print(f"Файл {template_file} содержит невалидный JSON")
         return 1
 
     standard_outbounds = [
@@ -196,7 +208,7 @@ def main():
     
     chunk_size = math.ceil(len(all_outbounds) / NUM_OUTPUT_FILES)
     
-    print(f"\n📦 Создаю {NUM_OUTPUT_FILES} файлов по ~{chunk_size} прокси в каждом...\n")
+    print(f"\nСоздаю {NUM_OUTPUT_FILES} файлов по ~{chunk_size} прокси в каждом...\n")
 
     created_files = 0
     for i in range(NUM_OUTPUT_FILES):
@@ -213,14 +225,19 @@ def main():
         config['outbounds'] = proxy_chunk + standard_outbounds
         config['burstObservatory']['subjectSelector'] = proxy_tags
         config['routing']['balancers'][0]['selector'] = proxy_tags
-        config['remarks'] = f"🚀 Группа {i+1}/{NUM_OUTPUT_FILES} ({len(proxy_chunk)} прокси)"
+        config['remarks'] = f"Группа {i+1}/{NUM_OUTPUT_FILES} ({len(proxy_chunk)} прокси)"
 
         output_filename = output_dir / f'vless_group_{i+1:02d}.json'
         with open(output_filename, 'w', encoding='utf-8') as f:
             json.dump(config, f, indent=2, ensure_ascii=False)
         
-        print(f"  ✅ {output_filename.name} — {len(proxy_chunk)} прокси")
+        print(f"  Создан: {output_filename.name} — {len(proxy_chunk)} прокси")
         created_files += 1
 
     print(f"\n{'=' * 70}")
-    print(f"🎉 ГОТОВО! Создано {created_files} файлов в 
+    print(f"ГОТОВО! Создано {created_files} файлов в папке {OUTPUT_DIR}/")
+    print(f"{'=' * 70}")
+    return 0
+
+if __name__ == "__main__":
+    exit(main())
