@@ -1,5 +1,4 @@
 {
-  "remarks": "Группа (7 прокси) с балансиром и обходом RU сегмента",
   "burstObservatory": {
     "pingConfig": {
       "connectivity": "",
@@ -67,7 +66,7 @@
   "outbounds": [
     {
       "tag": "proxy-1",
-      "remarks": "🇷🇺 Россия #1 (База)",
+      "remarks": "🇷🇺 Россия #1",
       "protocol": "vless",
       "settings": {
         "vnext": [
@@ -99,7 +98,7 @@
     },
     {
       "tag": "proxy-2",
-      "remarks": "🇷🇺 Россия #2 (База)",
+      "remarks": "🇷🇺 Россия #2",
       "protocol": "vless",
       "settings": {
         "vnext": [
@@ -128,7 +127,7 @@
     },
     {
       "tag": "proxy-3",
-      "remarks": "🇷🇺 Россия #3 (База)",
+      "remarks": "🇷🇺 Россия #3",
       "protocol": "vless",
       "settings": {
         "vnext": [
@@ -158,7 +157,7 @@
     },
     {
       "tag": "proxy-4",
-      "remarks": "🇷🇺 Россия #1",
+      "remarks": "🇷🇺 Россия #1 (Добавлен)",
       "protocol": "vless",
       "settings": {
         "vnext": [
@@ -188,7 +187,7 @@
     },
     {
       "tag": "proxy-5",
-      "remarks": "🇩🇪 ФРГ | LTE #2",
+      "remarks": "🇩🇪 ФРГ | LTE #2 (Добавлен)",
       "protocol": "ss",
       "settings": {},
       "streamSettings": {
@@ -197,7 +196,7 @@
     },
     {
       "tag": "proxy-6",
-      "remarks": "🇷🇺 Россия #3",
+      "remarks": "🇷🇺 Россия #3 (Добавлен)",
       "protocol": "vless",
       "settings": {
         "vnext": [
@@ -227,7 +226,7 @@
     },
     {
       "tag": "proxy-7",
-      "remarks": "🇷🇺 Россия | LTE #4",
+      "remarks": "🇷🇺 Россия | LTE #4 (Добавлен)",
       "protocol": "vless",
       "settings": {
         "vnext": [
@@ -294,58 +293,11 @@
         "type": "field"
       },
       {
-        "type": "field",
-        "domain": [
-          "domain:ru",
-          "domain:su",
-          "domain:xn--p1ai",
-          "domain:vk.com",
-          "domain:vk.ru",
-          "domain:userapi.com",
-          "domain:vk-cdn.net",
-          "domain:vkuser.net",
-          "domain:mvk.com",
-          "domain:yandex.ru",
-          "domain:yandex.net",
-          "domain:ya.ru",
-          "domain:kinopoisk.ru",
-          "domain:mail.ru",
-          "domain:ok.ru",
-          "domain:avito.ru",
-          "domain:avito.st",
-          "keyword:yandex",
-          "keyword:vkontakte",
-          "keyword:userapi",
-          "keyword:mail",
-          "keyword:rutube",
-          "keyword:sber",
-          "keyword:tinkoff",
-          "keyword:alfabank",
-          "keyword:vtb",
-          "keyword:gosuslugi"
-        ],
-        "outboundTag": "direct"
-      },
-      {
-        "type": "field",
-        "ip": [
-          "192.168.0.0/16",
-          "10.0.0.0/8",
-          "172.16.0.0/12",
-          "127.0.0.0/8",
-          "fc00::/7",
-          "fe80::/10",
-          "87.240.128.0/18",
-          "93.186.224.0/20",
-          "95.213.0.0/18"
-        ],
-        "outboundTag": "direct"
-      },
-      {
         "balancerTag": "Super_Balancer",
         "network": "tcp,udp",
         "type": "field"
       }
     ]
-  }
+  },
+  "remarks": "Группа 1/10 (7 прокси)"
 }
