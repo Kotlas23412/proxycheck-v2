@@ -6,10 +6,9 @@ import math
 from pathlib import Path
 
 # --- НАСТРОЙКИ ---
-# Пути относительно корня репозитория
-CONFIGS_DIR = '../configs'  # ← Исходные файлы вне tools
-OUTPUT_DIR = 'output/vless_configs'  # ← Результаты внутри tools
-TEMPLATE_FILE = 'scripts/template.json'  # ← Шаблон внутри tools/scripts
+CONFIGS_DIR = 'configs'              # ← Исходные файлы
+OUTPUT_DIR = 'vless_configs'         # ← Результаты в корне репозитория
+TEMPLATE_FILE = 'tools/template.json' # ← Шаблон в tools
 
 INPUT_FILES = [
     'top100_available',
@@ -125,13 +124,13 @@ def main():
     print("🤖 ГЕНЕРАТОР VLESS ПРОКСИ-КОНФИГУРАЦИЙ")
     print("=" * 70)
     
-    # Получаем абсолютный путь к папке со скриптом
-    script_dir = Path(__file__).parent.parent  # tools/
-    configs_dir = script_dir / CONFIGS_DIR
-    output_dir = script_dir / OUTPUT_DIR
-    template_file = script_dir / TEMPLATE_FILE
+    # Работаем относительно корня репозитория
+    repo_root = Path.cwd()
+    configs_dir = repo_root / CONFIGS_DIR
+    output_dir = repo_root / OUTPUT_DIR
+    template_file = repo_root / TEMPLATE_FILE
     
-    print(f"📂 Рабочая директория: {script_dir}")
+    print(f"📂 Корень репозитория: {repo_root}")
     print(f"📂 Папка с конфигами: {configs_dir}")
     print(f"📂 Папка для результатов: {output_dir}")
     
@@ -224,9 +223,4 @@ def main():
         created_files += 1
 
     print(f"\n{'=' * 70}")
-    print(f"🎉 ГОТОВО! Создано {created_files} файлов в '{output_dir.relative_to(script_dir)}'")
-    print(f"{'=' * 70}")
-    return 0
-
-if __name__ == "__main__":
-    exit(main())
+    print(f"🎉 ГОТОВО! Создано {created_files} файлов в 
