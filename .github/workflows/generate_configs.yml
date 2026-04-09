@@ -1,0 +1,64 @@
+name: Generate VLESS Configs
+
+on:
+  # Запуск по расписанию (каждые 6 часов)
+  schedule:
+    - cron: '0 */6 * * *'
+  
+  # Запуск вручную через интерфейс GitHub
+  workflow_dispatch:
+  
+  # Запуск при пуше в main ветку (если нужно)
+  push:
+    branches:
+      - main
+    paths:
+      - 'configs/**'
+      - 'scripts/**'
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: 📦 Install dependencies
+      run: |
+        pip install --upgrade pip
+        # Если используете GeoIP, раскомментируйте:
+        # pip install geoip2
+    
+    - name: 🚀 Run generator script
+      run: |
+        python scripts/generate_vless_groups.py
+    
+    - name: 📊 Check generated files
+      run: |
+        echo "=== Созданные файлы ==="
+        ls -lh output/vless_configs/
+        echo "=== Всего файлов: ==="
+        ls output/vless_configs/ | wc -l
+    
+    - name: 💾 Commit and push changes
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add output/vless_configs/
+        git diff --staged --quiet || git commit -m "🤖 Auto-update VLESS configs [$(date +'%Y-%m-%d %H:%M:%S')]"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: 📤 Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: vless-configs-${{ github.run_number }}
+        path: output/vless_configs/
+        retention-days: 30
