@@ -1,0 +1,196 @@
+{
+  "burstObservatory": {
+    "pingConfig": {
+      "connectivity": "",
+      "destination": "http://www.gstatic.com/generate_204",
+      "interval": "1m",
+      "sampling": 1,
+      "timeout": "5s"
+    },
+    "subjectSelector": [
+      "proxy-7",
+      "proxy-8",
+      "proxy-9"
+    ]
+  },
+  "dns": {
+    "queryStrategy": "UseIP",
+    "servers": [
+      "1.1.1.1",
+      "1.0.0.1"
+    ]
+  },
+  "inbounds": [
+    {
+      "listen": "127.0.0.1",
+      "port": 10808,
+      "protocol": "socks",
+      "settings": {
+        "auth": "noauth",
+        "udp": true
+      },
+      "sniffing": {
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ],
+        "enabled": true,
+        "routeOnly": false
+      },
+      "tag": "socks"
+    },
+    {
+      "listen": "127.0.0.1",
+      "port": 10809,
+      "protocol": "http",
+      "settings": {
+        "allowTransparent": false
+      },
+      "sniffing": {
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ],
+        "enabled": true,
+        "routeOnly": false
+      },
+      "tag": "http"
+    }
+  ],
+  "outbounds": [
+    {
+      "tag": "proxy-7",
+      "remarks": "🇷🇺 Россия #7",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "ru1.just-cloud.org",
+            "port": 443,
+            "users": [
+              {
+                "id": "0847ad40-cf50-425c-90bc-43abf075e8ae",
+                "encryption": "none",
+                "flow": "xtls-rprx-vision"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "serverName": "sun6-22.userapi.com",
+          "fingerprint": "chrome",
+          "publicKey": "xklZVcSla9QcuZsbNMjb1wbbpoRI-GuCzKxvVzEzKmE"
+        }
+      }
+    },
+    {
+      "tag": "proxy-8",
+      "remarks": "🇷🇺 Россия #8",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "msk3.frostbot.ru",
+            "port": 443,
+            "users": [
+              {
+                "id": "5b77fb18-cece-4759-9a81-571f1be53e0c",
+                "encryption": "none",
+                "flow": "xtls-rprx-vision"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "serverName": "msk3.frostbot.ru",
+          "fingerprint": "chrome",
+          "publicKey": "jdua-L9jgUfUe_7lPh72TV4JJALvOmdwH68C8pMP8RQ",
+          "shortId": "fe"
+        }
+      }
+    },
+    {
+      "tag": "proxy-9",
+      "remarks": "🇷🇺 Россия #9",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "85.92.111.163",
+            "port": 2083,
+            "users": [
+              {
+                "id": "db230947-ac07-462a-adeb-b0c7ec994cf5",
+                "encryption": "none"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "grpc",
+        "grpcSettings": {
+          "serviceName": "UpdateService"
+        },
+        "security": "reality",
+        "realitySettings": {
+          "serverName": "ir.ozone.ru",
+          "fingerprint": "chrome",
+          "publicKey": "J6NuOlIq3ypdTFc1TMhDDKmF8BWPnNWZq1EkxD7K-lQ",
+          "shortId": "6da16b1335651b38"
+        }
+      }
+    },
+    {
+      "protocol": "freedom",
+      "tag": "direct"
+    },
+    {
+      "protocol": "blackhole",
+      "tag": "block"
+    }
+  ],
+  "routing": {
+    "balancers": [
+      {
+        "fallbackTag": "direct",
+        "selector": [
+          "proxy-7",
+          "proxy-8",
+          "proxy-9"
+        ],
+        "strategy": {
+          "type": "leastLoad"
+        },
+        "tag": "Super_Balancer"
+      }
+    ],
+    "domainMatcher": "hybrid",
+    "domainStrategy": "IPIfNonMatch",
+    "rules": [
+      {
+        "outboundTag": "direct",
+        "protocol": [
+          "bittorrent"
+        ],
+        "type": "field"
+      },
+      {
+        "balancerTag": "Super_Balancer",
+        "network": "tcp,udp",
+        "type": "field"
+      }
+    ]
+  },
+  "remarks": "Группа 3/10 (3 прокси)"
+}

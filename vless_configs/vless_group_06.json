@@ -1,0 +1,197 @@
+{
+  "burstObservatory": {
+    "pingConfig": {
+      "connectivity": "",
+      "destination": "http://www.gstatic.com/generate_204",
+      "interval": "1m",
+      "sampling": 1,
+      "timeout": "5s"
+    },
+    "subjectSelector": [
+      "proxy-16",
+      "proxy-17",
+      "proxy-18"
+    ]
+  },
+  "dns": {
+    "queryStrategy": "UseIP",
+    "servers": [
+      "1.1.1.1",
+      "1.0.0.1"
+    ]
+  },
+  "inbounds": [
+    {
+      "listen": "127.0.0.1",
+      "port": 10808,
+      "protocol": "socks",
+      "settings": {
+        "auth": "noauth",
+        "udp": true
+      },
+      "sniffing": {
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ],
+        "enabled": true,
+        "routeOnly": false
+      },
+      "tag": "socks"
+    },
+    {
+      "listen": "127.0.0.1",
+      "port": 10809,
+      "protocol": "http",
+      "settings": {
+        "allowTransparent": false
+      },
+      "sniffing": {
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ],
+        "enabled": true,
+        "routeOnly": false
+      },
+      "tag": "http"
+    }
+  ],
+  "outbounds": [
+    {
+      "tag": "proxy-16",
+      "remarks": "🇷🇺 Россия #16",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "188.225.82.117",
+            "port": 443,
+            "users": [
+              {
+                "id": "f1c896f9-60ff-4448-a429-bfc900eb5caf",
+                "encryption": "none",
+                "flow": "xtls-rprx-vision"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "serverName": "api-maps.yandex.ru",
+          "fingerprint": "randomized",
+          "publicKey": "gkXWyBWBgObexMJGfDoDLbX2xKJbQwLLEEkzt-4j3ik",
+          "spiderX": "/"
+        }
+      }
+    },
+    {
+      "tag": "proxy-17",
+      "remarks": "🇷🇺 Россия #17",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "ru186.tcpnet.fun",
+            "port": 7443,
+            "users": [
+              {
+                "id": "5844340d-634b-4fef-8524-db3ba38112f0",
+                "encryption": "none"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "grpc",
+        "grpcSettings": {
+          "serviceName": "grpc"
+        },
+        "security": "reality",
+        "realitySettings": {
+          "serverName": "ru186.tcpnet.fun",
+          "fingerprint": "firefox",
+          "publicKey": "yP0gYZ4Pc4IehdZwqfYJN2WGR14LVQBReK8A4fMW128",
+          "shortId": "2a9a96e9"
+        }
+      }
+    },
+    {
+      "tag": "proxy-18",
+      "remarks": "🇷🇺 Россия #18",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "161.104.105.144",
+            "port": 8443,
+            "users": [
+              {
+                "id": "07d9e808-bbee-4a11-b110-a26cf3f66c84",
+                "encryption": "none",
+                "flow": "xtls-rprx-vision"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "serverName": "rbc.ru",
+          "fingerprint": "random",
+          "publicKey": "ISa-DZOI4LRRb9DHMFYm5oFqBXDjYzz0hVWUfWvzLmo",
+          "shortId": "dc8109baf0f607ea"
+        }
+      }
+    },
+    {
+      "protocol": "freedom",
+      "tag": "direct"
+    },
+    {
+      "protocol": "blackhole",
+      "tag": "block"
+    }
+  ],
+  "routing": {
+    "balancers": [
+      {
+        "fallbackTag": "direct",
+        "selector": [
+          "proxy-16",
+          "proxy-17",
+          "proxy-18"
+        ],
+        "strategy": {
+          "type": "leastLoad"
+        },
+        "tag": "Super_Balancer"
+      }
+    ],
+    "domainMatcher": "hybrid",
+    "domainStrategy": "IPIfNonMatch",
+    "rules": [
+      {
+        "outboundTag": "direct",
+        "protocol": [
+          "bittorrent"
+        ],
+        "type": "field"
+      },
+      {
+        "balancerTag": "Super_Balancer",
+        "network": "tcp,udp",
+        "type": "field"
+      }
+    ]
+  },
+  "remarks": "Группа 6/10 (3 прокси)"
+}
