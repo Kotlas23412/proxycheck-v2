@@ -11,7 +11,7 @@ on:
       - main
     paths:
       - 'configs/**'
-      - 'tool/scripts/**'
+      - 'tools/scripts/**'
 
 jobs:
   generate:
@@ -28,21 +28,21 @@ jobs:
     
     - name: 🚀 Run generator script
       run: |
-        cd tool
+        cd tools
         python scripts/generate_vless_groups.py
     
     - name: 📊 Check generated files
       run: |
         echo "=== Созданные файлы ==="
-        ls -lh tool/output/vless_configs/
+        ls -lh tools/output/vless_configs/
         echo "=== Всего файлов: ==="
-        ls tool/output/vless_configs/ | wc -l
+        ls tools/output/vless_configs/ | wc -l
     
     - name: 💾 Commit and push changes
       run: |
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
-        git add tool/output/vless_configs/
+        git add tools/output/vless_configs/
         git diff --staged --quiet || git commit -m "🤖 Auto-update VLESS configs [$(date +'%Y-%m-%d %H:%M:%S')]"
         git push
       env:
@@ -52,5 +52,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: vless-configs-${{ github.run_number }}
-        path: tool/output/vless_configs/
+        path: добавь картинок в презентацию/output/vless_configs/
         retention-days: 30
