@@ -7,9 +7,9 @@ from pathlib import Path
 
 # --- НАСТРОЙКИ ---
 # Пути относительно корня репозитория
-CONFIGS_DIR = '../configs'  # ← Исходные файлы вне tool
-OUTPUT_DIR = 'output/vless_configs'  # ← Результаты внутри tool
-TEMPLATE_FILE = 'scripts/template.json'  # ← Шаблон внутри tool/scripts
+CONFIGS_DIR = '../configs'  # ← Исходные файлы вне tools
+OUTPUT_DIR = 'output/vless_configs'  # ← Результаты внутри tools
+TEMPLATE_FILE = 'scripts/template.json'  # ← Шаблон внутри tools/scripts
 
 INPUT_FILES = [
     'top100_available',
@@ -126,7 +126,7 @@ def main():
     print("=" * 70)
     
     # Получаем абсолютный путь к папке со скриптом
-    script_dir = Path(__file__).parent.parent  # tool/
+    script_dir = Path(__file__).parent.parent  # tools/
     configs_dir = script_dir / CONFIGS_DIR
     output_dir = script_dir / OUTPUT_DIR
     template_file = script_dir / TEMPLATE_FILE
