@@ -10,10 +10,7 @@
     "subjectSelector": [
       "proxy-1",
       "proxy-2",
-      "proxy-3",
-      "proxy-4",
-      "proxy-6",
-      "proxy-7"
+      "proxy-3"
     ]
   },
   "dns": {
@@ -155,96 +152,6 @@
       }
     },
     {
-      "tag": "proxy-4",
-      "remarks": "🇷🇺 Россия #1 (Добавлен)",
-      "protocol": "vless",
-      "settings": {
-        "vnext": [
-          {
-            "address": "188.225.74.242",
-            "port": 443,
-            "users": [
-              {
-                "id": "0bceada8-ec44-44bc-808b-6e2cefe738e8",
-                "encryption": "none",
-                "flow": "xtls-rprx-vision"
-              }
-            ]
-          }
-        ]
-      },
-      "streamSettings": {
-        "network": "tcp",
-        "security": "reality",
-        "realitySettings": {
-          "serverName": "eh.vk.com",
-          "fingerprint": "randomized",
-          "publicKey": "8_eCxkrzPtoxZKM05euCs664cL_knpqvbr-KTlnHVmw",
-          "shortId": "17a729f0cd30b6a7"
-        }
-      }
-    },
-    {
-      "tag": "proxy-6",
-      "remarks": "🇷🇺 Россия #3 (Добавлен)",
-      "protocol": "vless",
-      "settings": {
-        "vnext": [
-          {
-            "address": "161.104.106.93",
-            "port": 5443,
-            "users": [
-              {
-                "id": "0bceada8-ec44-44bc-808b-6e2cefe738e8",
-                "encryption": "none",
-                "flow": "xtls-rprx-vision"
-              }
-            ]
-          }
-        ]
-      },
-      "streamSettings": {
-        "network": "tcp",
-        "security": "reality",
-        "realitySettings": {
-          "serverName": "api-maps.yandex.ru",
-          "fingerprint": "randomized",
-          "publicKey": "vJz6ZXSwoP43DDUQxJksEsWA8AmlNo2KfJDY8QWzKw0",
-          "shortId": "41bd4196ed1383f1"
-        }
-      }
-    },
-    {
-      "tag": "proxy-7",
-      "remarks": "🇷🇺 Россия | LTE #4 (Добавлен)",
-      "protocol": "vless",
-      "settings": {
-        "vnext": [
-          {
-            "address": "84.23.54.186",
-            "port": 9887,
-            "users": [
-              {
-                "id": "b59cf03c-704f-44b0-b329-d3443e860481",
-                "encryption": "none",
-                "flow": "xtls-rprx-vision"
-              }
-            ]
-          }
-        ]
-      },
-      "streamSettings": {
-        "network": "tcp",
-        "security": "reality",
-        "realitySettings": {
-          "serverName": "www.io.ozone.ru",
-          "fingerprint": "random",
-          "publicKey": "im7-98zxWz_OGimQfeoN_Y5p1tAy8KoZCxOe2wOeWS4",
-          "shortId": ""
-        }
-      }
-    },
-    {
       "protocol": "freedom",
       "tag": "direct"
     },
@@ -260,10 +167,7 @@
         "selector": [
           "proxy-1",
           "proxy-2",
-          "proxy-3",
-          "proxy-4",
-          "proxy-6",
-          "proxy-7"
+          "proxy-3"
         ],
         "strategy": {
           "type": "leastLoad"
@@ -288,5 +192,5 @@
       }
     ]
   },
-  "remarks": "Группа 1/10 (6 рабочих прокси)"
+  "remarks": "Группа 1/10 (3 прокси)"
 }
